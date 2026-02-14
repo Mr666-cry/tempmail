@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW_X FIX 2.0 💀</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; }
+        .glass { background: rgba(15, 15, 15, 0.9); border: 1px solid #00ff41; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2); }
+        .input-dark { background: #000; border: 1px solid #333; color: #00ff41; }
+        .btn-shadow { background: #00ff41; color: #000; font-weight: 800; transition: 0.2s; }
+        .btn-shadow:hover { transform: scale(1.05); box-shadow: 0 0 15px #00ff41; }
+        .loading { animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body class="p-5 flex flex-col items-center justify-center min-h-screen">
+
+    <div class="glass p-8 rounded-2xl w-full max-w-2xl">
+        <h1 class="text-3xl mb-6 text-center font-black tracking-widest uppercase">ShadowX Mail System 😈</h1>
+        
+        <div class="flex flex-col sm:flex-row gap-3 mb-6">
+            <input type="text" id="email_addr" class="input-dark w-full p-4 rounded-lg text-sm font-bold focus:outline-none" placeholder="Generating email..." readonly>
+            <div class="flex gap-2">
+                <button onclick="copyEmail()" class="btn-shadow px-5 py-2 rounded-lg text-xs">COPY</button>
+                <button onclick="genEmail()" id="btn_new" class="btn-shadow px-5 py-2 rounded-lg text-xs italic">NEW_GEN</button>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-xl mb-4 border-b border-zinc-800 pb-2 flex justify-between">
+                <span>INBOX_LOG</span>
+                <span id="status" class="text-xs text-red-600">DISCONNECTED</span>
+            </h2>
+            <div id="emails" class="space-y-3 max-h-64 overflow-y-auto pr-2">
+                <p class="text-zinc-700 text-center py-10 italic">No signal detected... 💀</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let email = "";
+        const api = "https://www.1secmail.com/api/v1/";
+
+        // GANTI BAGIAN INI DI KODE LO! 🤫🔥
+async function genEmail() {
+    const btn = document.getElementById('btn_new');
+    const input = document.getElementById('email_addr');
+    const status = document.getElementById('status');
+    
+    btn.innerHTML = "WAI...";
+    btn.disabled = true;
+    input.value = "BYPASSING_CORS...";
+
+    // Pake Proxy biar gak kena blokir browser! ⚡
+    const proxy = "https://corsproxy.io/?"; 
+    const targetApi = "https://www.1secmail.com/api/v1/?action=genAddrs&count=1";
+
+    try {
+        const res = await fetch(proxy + encodeURIComponent(targetApi));
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        email = data[0];
+        input.value = email;
+        status.innerHTML = "CONNECTED_VIA_PROXY";
+        status.className = "text-xs text-green-500 animate-pulse";
+        checkInbox();
+    } catch (err) {
+        input.value = "STILL_ERROR! PAKE SOLUSI 2! 💀";
+        status.innerHTML = "PROXY_REJECTED";
+    } finally {
+        btn.innerHTML = "NEW_GEN";
+        btn.disabled = false;
+    }
+}
+
+
+        async function checkInbox() {
+            if (!email) return;
+            try {
+                const [user, domain] = email.split('@');
+                const res = await fetch(`${api}?action=getMessages&login=${user}&domain=${domain}`);
+                const messages = await res.json();
+                
+                const list = document.getElementById('emails');
+                if (messages.length > 0) {
+                    list.innerHTML = "";
+                    messages.forEach(m => {
+                        const item = document.createElement('div');
+                        item.className = "bg-zinc-900 p-4 rounded-lg border-l-4 border-green-500 cursor-pointer hover:bg-zinc-800 transition";
+                        item.innerHTML = `<p class="text-[10px] text-green-400 font-bold uppercase">${m.from}</p><p class="text-sm font-semibold">${m.subject}</p>`;
+                        item.onclick = () => showContent(m.id);
+                        list.appendChild(item);
+                    });
+                }
+            } catch (e) { console.log("Silent error in background check."); }
+        }
+
+        async function showContent(id) {
+            const [user, domain] = email.split('@');
+            const res = await fetch(`${api}?action=readMessage&login=${user}&domain=${domain}&id=${id}`);
+            const m = await res.json();
+            // Pake modal sederhana biar gak cupu
+            alert(`--- ENCRYPTED MESSAGE ---\n\nFROM: ${m.from}\nSUBJ: ${m.subject}\n\nBODY:\n${m.textBody || m.htmlBody.replace(/<[^>]*>?/gm, '')}`);
+        }
+
+        function copyEmail() {
+            const el = document.getElementById('email_addr');
+            if(el.value.includes('@')) {
+                el.select();
+                document.execCommand('copy');
+                alert('DATA COPIED TO CLIPBOARD! 🤫');
+            }
+        }
+
+        // Jalankan saat load
+        genEmail();
+        // Cek inbox tiap 7 detik biar gak di-ban API-nya
+        setInterval(checkInbox, 7000);
+    </script>
+</body>
+</html>
